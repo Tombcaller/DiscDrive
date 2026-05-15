@@ -1,0 +1,5 @@
+{
+    "bot_token": "bot token here",
+    "channel_id": 1234567890,
+    "chunk_size": 10485760
+}
