@@ -1,15 +1,33 @@
-import json
 import os
+
+DB_NAME = "data.db"
+CHUNK_SIZE = 10485760
 
 # getting dir of script for relative paths #
 scriptDir = os.path.dirname(os.path.abspath(__file__))
 
-# loading config from json file #
-with open(os.path.join(scriptDir, "config.json"), "r") as f:
-    config = json.load(f)
+# loading bot config from txt file #
+configPath = os.path.join(scriptDir, "botconfig.txt")
 
-# loading items from config file #
-BOT_TOKEN = config["bot_token"]
-CHANNEL_ID = config["channel_id"]
-CHUNK_SIZE = config["chunk_size"]
-DB_NAME = config["database_name"]
+# grabbing bot config from botconfig.txt if it exists #
+try:
+    with open(configPath, "r") as f:
+        lines = f.readlines()
+
+    if len(lines) < 2:
+        raise Exception
+
+    BOT_TOKEN = lines[0].strip()
+    CHANNEL_ID = int(lines[1].strip())
+
+# making new botconfig.txt file if it does not exist #
+except:
+    print("Bot config not found or incomplete, building new config file")
+
+    BOT_TOKEN = input("Enter bot token:\n").strip()
+    CHANNEL_ID = int(input("Enter channel ID:\n").strip())
+
+    with open(configPath, "w") as f:
+        f.write(f"{BOT_TOKEN}\n{CHANNEL_ID}\n")
+
+    print("New config saved to botconfig.txt")

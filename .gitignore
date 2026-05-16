@@ -1,3 +1,3 @@
-files.db
+data.db
 *.pyc
-config.json
+botconfig.txt
