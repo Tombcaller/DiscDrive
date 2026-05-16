@@ -26,7 +26,7 @@ def status(msg):
 # ---------------------------------------------------- #
 
 # function to chunk and upload files from a path (-u) #
-async def upload_file(filePath, fileId, channel):
+async def upload_file(fileId, filePath, channel):
 
     # checking if fileId already exists #
     if get_file_info(fileId):
@@ -72,7 +72,7 @@ async def upload_file(filePath, fileId, channel):
 # ---------------------------------------------------- #
 
 # function to download a file from a fileId to a specified path #
-async def download_file(filePath, fileId, channel):
+async def download_file(fileId, filePath, channel):
 
     # grabbing info from db about file and checking if it exists #
     fileInfo = get_file_info(fileId)
