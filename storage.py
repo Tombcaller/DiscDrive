@@ -6,9 +6,19 @@ import time
 import math
 import hashlib
 import requests
+import string
+
 
 from config import CHUNK_SIZE
 from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info
+
+# ---------------------------------------------------- #
+
+async def get_channel(name, guild):
+    channel = discord.utils.get(guild.text_channels, name=name)
+    if channel is None:
+        channel = await guild.create_text_channel(name)
+    return channel
 
 # ---------------------------------------------------- #
 
@@ -26,7 +36,7 @@ def status(msg):
 # ---------------------------------------------------- #
 
 # function to chunk and upload files from a path (-u) #
-async def upload_file(fileId, filePath, channel):
+async def upload_file(fileId, channelName, filePath, guild):
 
     # checking if fileId already exists #
     if get_file_info(fileId):
@@ -42,6 +52,8 @@ async def upload_file(fileId, filePath, channel):
     print("Hashing file...")
     fileHash = hash_file(filePath)
 
+    channel = await get_channel(channelName, guild)
+
     print(f'Uploading {fileName} as "{fileId}"...\nTotal chunks needed: {chunkCount}\n(File Size - {fileSize}B/{round(fileSize/1024**2, 2)}MiB)\n')
 
     # getting current time for speed calc #
@@ -51,12 +63,12 @@ async def upload_file(fileId, filePath, channel):
     with open(filePath, "rb") as infile:
         for i in range(chunkCount):
             chunk = infile.read(CHUNK_SIZE)
-            file = discord.File(io.BytesIO(chunk), filename=f"[{i+1} - {chunkCount}]")
+            file = discord.File(io.BytesIO(chunk), filename=f"[{fileId}][{i+1} - {chunkCount}]")
 
             status(f"Uploading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
 
             msg = await channel.send(file=file)
-            save_chunk(fileId, msg.id, i + 1)
+            save_chunk(fileId, msg.id, channel.id, i + 1)
 
     status(f"Finished uploading {chunkCount} chunks.")
     print("\n")
@@ -66,13 +78,13 @@ async def upload_file(fileId, filePath, channel):
     print(f"Avg upload speed: {fileSize/1000000/elapsed:.2f} Mbps, took {elapsed:.2f}s")
 
     print("Saving file data to database.")
-    save_new_file(fileId, fileName, fileSize, chunkCount, fileHash)
+    save_new_file(fileId, fileName, fileSize, chunkCount, fileHash, channel.id)
     print("Upload complete.")
 
 # ---------------------------------------------------- #
 
 # function to download a file from a fileId to a specified path #
-async def download_file(fileId, filePath, channel):
+async def download_file(fileId, channelName, filePath, guild):
 
     # grabbing info from db about file and checking if it exists #
     fileInfo = get_file_info(fileId)
@@ -82,6 +94,8 @@ async def download_file(fileId, filePath, channel):
         return
     
     fileName, fileSize, chunkCount = fileInfo
+
+    channel = await get_channel(channelName, guild)
 
     print(f"Downloading {fileName} ({fileSize} B, {chunkCount} chunks)")
 
@@ -125,8 +139,10 @@ async def download_file(fileId, filePath, channel):
 
 # ---------------------------------------------------- #
 
-async def remove_file(fileId, channel):
+async def remove_file(fileId, channelName, guild):
     startTime = time.time()
+
+    channel = await get_channel(channelName, guild)
 
     status(f"Grabbing message IDs for {fileId} from DB")
     chunkMessageIds = get_chunks(fileId)

@@ -18,13 +18,16 @@ def setup_db():
             fileHash TEXT,
             fileName TEXT,
             fileSize INTEGER,
-            chunkCount INTEGER
+            chunkCount INTEGER,
+            channelId INTEGER
         )
     """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS fileChunks (
             fileId TEXT,
             messageId TEXT PRIMARY KEY,
+            channelId INTEGER,
             chunkIndex INTEGER,
             FOREIGN KEY (fileId) REFERENCES files(fileId)
         )
@@ -32,18 +35,18 @@ def setup_db():
     conn.commit()
 
 # add new file to file info table after full upload #
-def save_new_file(fileId, fileName, fileSize, chunkCount, fileHash):
+def save_new_file(fileId, fileName, fileSize, chunkCount, fileHash, channelId):
     cursor.execute(
-        "INSERT OR IGNORE INTO files (fileId, fileName, fileSize, chunkCount, fileHash) VALUES (?, ?, ?, ?, ?)",
-        [fileId, fileName, fileSize, chunkCount, fileHash]
+        "INSERT OR IGNORE INTO files (fileId, fileName, fileSize, chunkCount, fileHash, channelId) VALUES (?, ?, ?, ?, ?, ?)",
+        [fileId, fileName, fileSize, chunkCount, fileHash, channelId]
     )
     conn.commit()
 
 # save the data of an uploaded chunk after upload #
-def save_chunk(fileId, messageId, chunkIndex):
+def save_chunk(fileId, messageId, channelId, chunkIndex):
     cursor.execute(
-        "INSERT INTO fileChunks (fileId, messageId, chunkIndex) VALUES (?, ?, ?)",
-        (fileId, messageId, chunkIndex)
+        "INSERT INTO fileChunks (fileId, messageId, channelId, chunkIndex) VALUES (?, ?, ?, ?)",
+        (fileId, messageId, channelId, chunkIndex)
     )
     conn.commit()
 
@@ -58,7 +61,7 @@ def get_chunks(fileId):
 # get info of file for redownloading #
 def get_file_info(fileId):
     cursor.execute(
-        "SELECT fileName, fileSize, chunkCount FROM files WHERE fileId = ?",
+        "SELECT fileName, fileSize, chunkCount FROM files WHERE fileId = ? ",
         [fileId]
     )
     row = cursor.fetchall()

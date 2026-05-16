@@ -3,7 +3,7 @@
 import sys
 import discord
 
-from config import BOT_TOKEN, CHANNEL_ID
+from config import BOT_TOKEN, GUILD_ID
 from db import list_files
 from storage import upload_file, download_file, remove_file
 
@@ -17,21 +17,21 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f"Sucessfully logged in as bot: {client.user}\n")
-    channel = client.get_channel(CHANNEL_ID)
+    guild = client.get_guild(GUILD_ID)
 
     # checking args to allocate task #
     match sys.argv[1]:
 
         # -u | uploading file #
         case "-u":
-            await upload_file(sys.argv[2], sys.argv[3], channel)
+            await upload_file(sys.argv[2], sys.argv[3], sys.argv[4], guild)
 
         # -d | downloading file #
         case "-d":
-            await download_file(sys.argv[2], sys.argv[3], channel)
+            await download_file(sys.argv[2], sys.argv[3], sys.argv[4], guild)
 
         case "-r":
-            await remove_file(sys.argv[2], channel)
+            await remove_file(sys.argv[2], sys.argv[3], guild)
 
         # -ls | listing files in database #
         case "-ls":
@@ -44,7 +44,7 @@ async def on_ready():
         
         # invalid arg 1 error #
         case _:
-            print("Invalid args. Usage is -u <path> <id> | -d <path> <id> | -ls")
+            print("Invalid args. Usage is -u <path> <id> | -d <path> <id> | -r <id> | -ls")
 
     # closing client after task completed #
     await client.close()

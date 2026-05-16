@@ -18,16 +18,16 @@ try:
         raise Exception
 
     BOT_TOKEN = lines[0].strip()
-    CHANNEL_ID = int(lines[1].strip())
+    GUILD_ID = int(lines[1].strip())
 
 # making new botconfig.txt file if it does not exist #
 except:
     print("Bot config not found or incomplete, building new config file")
 
     BOT_TOKEN = input("Enter bot token:\n").strip()
-    CHANNEL_ID = int(input("Enter channel ID:\n").strip())
+    GUILD_ID = int(input("Enter server ID:\n").strip())
 
     with open(configPath, "w") as f:
-        f.write(f"{BOT_TOKEN}\n{CHANNEL_ID}\n")
+        f.write(f"{BOT_TOKEN}\n{GUILD_ID}\n")
 
     print("New config saved to botconfig.txt")
