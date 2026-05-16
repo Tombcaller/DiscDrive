@@ -93,7 +93,7 @@ def get_file_channel_id(fileId):
 
 # list all files in db #
 def list_files():
-    cursor.execute("SELECT fileId, fileName, fileSize FROM files")
+    cursor.execute("SELECT fileId, fileName, fileSize FROM files ORDER BY fileId")
     return cursor.fetchall()
 
 # calling setup function to make db if it doesn't exist #
