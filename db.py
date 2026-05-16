@@ -83,6 +83,14 @@ def delete_file_info(fileId):
     )
     conn.commit()
 
+def get_file_channel_id(fileId):
+    cursor.execute(
+        "SELECT channelId FROM files WHERE fileId = ? ",
+        [fileId]
+    )
+    row = cursor.fetchone()
+    return row[0] if row else None
+
 # list all files in db #
 def list_files():
     cursor.execute("SELECT fileId, fileName, fileSize FROM files")

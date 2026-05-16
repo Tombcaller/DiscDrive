@@ -28,10 +28,10 @@ async def on_ready():
 
         # -d | downloading file #
         case "-d":
-            await download_file(sys.argv[2], sys.argv[3], sys.argv[4], guild)
+            await download_file(sys.argv[2], sys.argv[3], guild)
 
         case "-r":
-            await remove_file(sys.argv[2], sys.argv[3], guild)
+            await remove_file(sys.argv[2], guild)
 
         # -ls | listing files in database #
         case "-ls":
@@ -44,7 +44,7 @@ async def on_ready():
         
         # invalid arg 1 error #
         case _:
-            print("Invalid args. Usage is -u <path> <id> | -d <path> <id> | -r <id> | -ls")
+            print("Invalid args. Usage is -u <id> <channel> <path> | -d <id> <path> | -r <id> | -ls")
 
     # closing client after task completed #
     await client.close()

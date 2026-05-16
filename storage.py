@@ -6,18 +6,22 @@ import time
 import math
 import hashlib
 import requests
-import string
-
 
 from config import CHUNK_SIZE
-from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info
+from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info, get_file_channel_id
 
 # ---------------------------------------------------- #
 
-async def get_channel(name, guild):
+async def get_channel_from_name(name, guild):
     channel = discord.utils.get(guild.text_channels, name=name)
     if channel is None:
         channel = await guild.create_text_channel(name)
+    return channel
+
+async def get_channel_from_id(channelId, guild):
+    channel = discord.utils.get(guild.text_channels, id=channelId)
+    if channel is None:
+        print("Somehow, the channel has gone missing...")
     return channel
 
 # ---------------------------------------------------- #
@@ -52,7 +56,7 @@ async def upload_file(fileId, channelName, filePath, guild):
     print("Hashing file...")
     fileHash = hash_file(filePath)
 
-    channel = await get_channel(channelName, guild)
+    channel = await get_channel_from_name(channelName, guild)
 
     print(f'Uploading {fileName} as "{fileId}"...\nTotal chunks needed: {chunkCount}\n(File Size - {fileSize}B/{round(fileSize/1024**2, 2)}MiB)\n')
 
@@ -84,7 +88,7 @@ async def upload_file(fileId, channelName, filePath, guild):
 # ---------------------------------------------------- #
 
 # function to download a file from a fileId to a specified path #
-async def download_file(fileId, channelName, filePath, guild):
+async def download_file(fileId, filePath, guild):
 
     # grabbing info from db about file and checking if it exists #
     fileInfo = get_file_info(fileId)
@@ -95,7 +99,7 @@ async def download_file(fileId, channelName, filePath, guild):
     
     fileName, fileSize, chunkCount = fileInfo
 
-    channel = await get_channel(channelName, guild)
+    channel = await get_channel_from_id(get_file_channel_id(fileId), guild)
 
     print(f"Downloading {fileName} ({fileSize} B, {chunkCount} chunks)")
 
@@ -139,10 +143,10 @@ async def download_file(fileId, channelName, filePath, guild):
 
 # ---------------------------------------------------- #
 
-async def remove_file(fileId, channelName, guild):
+async def remove_file(fileId, guild):
     startTime = time.time()
 
-    channel = await get_channel(channelName, guild)
+    channel = await get_channel_from_id(get_file_channel_id(fileId), guild)
 
     status(f"Grabbing message IDs for {fileId} from DB")
     chunkMessageIds = get_chunks(fileId)
