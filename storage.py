@@ -8,7 +8,7 @@ import hashlib
 import requests
 
 from config import CHUNK_SIZE
-from db import save_new_file, save_chunk, get_chunks, get_file_info
+from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info
 
 # ---------------------------------------------------- #
 
@@ -19,6 +19,9 @@ def hash_file(path, algorithm="sha256"):
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+def status(msg):
+    print(f"\r{msg:<69}", end="", flush=True)
 
 # ---------------------------------------------------- #
 
@@ -50,13 +53,13 @@ async def upload_file(filePath, fileId, channel):
             chunk = infile.read(CHUNK_SIZE)
             file = discord.File(io.BytesIO(chunk), filename=f"[{i+1} - {chunkCount}]")
 
-            sys.stdout.write(f"\rUploading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
-            sys.stdout.flush()
+            status(f"Uploading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
 
             msg = await channel.send(file=file)
             save_chunk(fileId, msg.id, i + 1)
 
-    sys.stdout.write(f"\rFinished uploading {chunkCount} chunks.\n\n")
+    status(f"Finished uploading {chunkCount} chunks.")
+    print("\n")
 
     # getting final time to find time elapsed #
     elapsed = time.time() - startTime
@@ -73,7 +76,7 @@ async def download_file(filePath, fileId, channel):
 
     # grabbing info from db about file and checking if it exists #
     fileInfo = get_file_info(fileId)
-    
+
     if not fileInfo:
         print("fileID not found in database.")
         return
@@ -102,24 +105,49 @@ async def download_file(filePath, fileId, channel):
                     msg = await channel.fetch_message(messageId)
                     break
                 except:
-                    sys.stdout.write(f"Error on chunk {i+1}, retrying (attempt {attempt+1})...\n")
-                    sys.stdout.flush()
+                    status(f"Error on chunk {i+1}, retrying (attempt {attempt+1})...\n")
                     time.sleep(1)
 
             # checking if message has expected format and downloading chunk then writing it to file #
             if msg and msg.attachments:
-                sys.stdout.write(f"\rDownloading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
-                sys.stdout.flush()
+                status(f"Downloading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
                 resp = requests.get(msg.attachments[0].url)
                 outfile.write(resp.content)
             else:
-                sys.stdout.write(f"\rFatal errors during download of chunk {i+1}.")
+                sys.stdout.write(f"Fatal errors during download of chunk {i+1}.")
 
-    sys.stdout.write(f"\rFinished downloading {chunkCount} chunks.\n\n")
-    sys.stdout.flush()
+    status(f"Finished downloading {chunkCount} chunks.")
+    print("\n")
 
     # getting final time to find time elapsed #
     elapsed = time.time() - startTime
     print(f"Avg download speed: {fileSize/1000000/elapsed:.2f} Mbps, took {elapsed:.2f}s")
+
+# ---------------------------------------------------- #
+
+async def remove_file(fileId, channel):
+    startTime = time.time()
+
+    status(f"Grabbing message IDs for {fileId} from DB")
+    chunkMessageIds = get_chunks(fileId)
+
+    status(f"Deleting DB chunks")
+    messages = []
+    
+    # deleting chunks and adding message objects to list for deletion #
+    for msgId in chunkMessageIds:
+        msg = await channel.fetch_message(msgId)
+        messages.append(msg)
+        delete_chunk(msgId)
+
+    status(f"Deleting Discord message IDs")
+    await channel.delete_messages(messages)
+
+    status(f"Deleting file info from DB")
+    delete_file_info(fileId)
+
+    elapsed = time.time() - startTime
+    print(f"\nFile deleted in {elapsed:.2f}s")
+    
 
 # ---------------------------------------------------- #

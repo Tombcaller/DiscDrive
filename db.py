@@ -64,6 +64,22 @@ def get_file_info(fileId):
     row = cursor.fetchall()
     return row[0] if row else None
 
+# delete chunk from db #
+def delete_chunk(messageId):
+    cursor.execute(
+        "DELETE FROM fileChunks WHERE messageId = ?",
+        [messageId]
+    )
+    conn.commit()
+
+# delete chunk from db #
+def delete_file_info(fileId):
+    cursor.execute(
+        "DELETE FROM files WHERE fileId = ?",
+        [fileId]
+    )
+    conn.commit()
+
 # list all files in db #
 def list_files():
     cursor.execute("SELECT fileId, fileName, fileSize FROM files")

@@ -5,7 +5,7 @@ import discord
 
 from config import BOT_TOKEN, CHANNEL_ID
 from db import list_files
-from storage import upload_file, download_file
+from storage import upload_file, download_file, remove_file
 
 # ---------------------------------------------------- #
 
@@ -29,6 +29,9 @@ async def on_ready():
         # -d | downloading file #
         case "-d":
             await download_file(sys.argv[2], sys.argv[3], channel)
+
+        case "-r":
+            await remove_file(sys.argv[2], channel)
 
         # -ls | listing files in database #
         case "-ls":
