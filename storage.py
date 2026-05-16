@@ -72,10 +72,13 @@ async def upload_file(filePath, fileId, channel):
 async def download_file(filePath, fileId, channel):
 
     # grabbing info from db about file and checking if it exists #
-    fileName, fileSize, chunkCount = get_file_info(fileId)
-    if not fileName or fileSize or chunkCount:
+    fileInfo = get_file_info(fileId)
+    
+    if not fileInfo:
         print("fileID not found in database.")
         return
+    
+    fileName, fileSize, chunkCount = fileInfo
 
     print(f"Downloading {fileName} ({fileSize} B, {chunkCount} chunks)")
 
