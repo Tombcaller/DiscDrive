@@ -7,7 +7,7 @@ import math
 import hashlib
 import requests
 
-from config import REGULAR_CHUNK_SIZE
+from config import REGULAR_CHUNK_SIZE, BASIC_CHUNK_SIZE, NITRO_CHUNK_SIZE
 from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info, get_file_channel_id
 
 # ---------------------------------------------------- #
@@ -143,17 +143,37 @@ async def download_file(fileId, filePath, guild):
 
 # ---------------------------------------------------- #
 
-async def chunk_file(nitroTier, fileId, chunkPath, filePath):
+
+# very broken right now #
+async def manual_upload_file(nitroTier, fileId, channelId, filePath):
+
+    nitroTier = int(nitroTier)
+    if nitroTier == 0:   chunkSize = REGULAR_CHUNK_SIZE
+    elif nitroTier == 1: chunkSize = BASIC_CHUNK_SIZE
+    elif nitroTier == 2: chunkSize = NITRO_CHUNK_SIZE
+    else: print("Invalid Nitro tier (0-2)"); return
+
+    fileSize = os.path.getsize(filePath)
+    chunkCount = math.ceil(fileSize / chunkSize)
+    fileName = os.path.basename(filePath)
+
+    os.makedirs(os.path.join("output", f"{fileId}"), exist_ok = True)
 
     with open(filePath, "rb") as infile:
-        for i in range(chunkCount):
-            chunk = infile.read(REGULAR_CHUNK_SIZE)
-            with open()
 
-            status(f"Saving {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
+        for chunkIndex in range(chunkCount):
+            chunk = infile.read(chunkSize)
 
-            with open(os.join(chunkPath, {fileId}.{i+1}), "wb") as outfile:
+            status(f"Saving {chunkIndex+1}/{chunkCount} ({(chunkIndex+1)/chunkCount:.2%})")
+
+            with open(os.path.join("output", f"{fileId}", f"{fileId}.c{chunkIndex+1}"), "wb") as outfile:
                 outfile.write(chunk)
+
+            messageId = 0
+            save_chunk(fileId, messageId, channelId, chunkIndex + 1)
+    
+    fileHash = "test"
+    save_new_file(fileId, fileName, fileSize, chunkCount, fileHash, channelId)
 
 # ---------------------------------------------------- #
 

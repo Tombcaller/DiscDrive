@@ -5,7 +5,7 @@ import discord
 
 from config import BOT_TOKEN, GUILD_ID
 from db import list_files
-from storage import upload_file, download_file, remove_file
+from storage import upload_file, download_file, remove_file, manual_upload_file
 
 # ---------------------------------------------------- #
 
@@ -27,8 +27,8 @@ async def on_ready():
             await upload_file(sys.argv[2], sys.argv[3], sys.argv[4], guild)
 
         # -c | chunking file into regular/basic/nitro chunks for manual sending #
-        case "-c":
-            await chunk_file(sys.argv[2], sys.argv[3])
+        case "-m":
+            await manual_upload_file(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 
         # -d | downloading file #
         case "-d":
