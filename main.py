@@ -26,6 +26,10 @@ async def on_ready():
         case "-u":
             await upload_file(sys.argv[2], sys.argv[3], sys.argv[4], guild)
 
+        # -c | chunking file into regular/basic/nitro chunks for manual sending #
+        case "-c":
+            await chunk_file(sys.argv[2], sys.argv[3])
+
         # -d | downloading file #
         case "-d":
             await download_file(sys.argv[2], sys.argv[3], guild)

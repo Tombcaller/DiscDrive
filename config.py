@@ -1,7 +1,9 @@
 import os
 
 DB_NAME = "data.db"
-CHUNK_SIZE = 10485760
+REGULAR_CHUNK_SIZE = 10485760
+BASIC_CHUNK_SIZE = 52428800
+NITRO_CHUNK_SIZE = 524288000
 
 # getting dir of script for relative paths #
 scriptDir = os.path.dirname(os.path.abspath(__file__))

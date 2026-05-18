@@ -7,7 +7,7 @@ import math
 import hashlib
 import requests
 
-from config import CHUNK_SIZE
+from config import REGULAR_CHUNK_SIZE
 from db import save_new_file, save_chunk, get_chunks, get_file_info, delete_chunk, delete_file_info, get_file_channel_id
 
 # ---------------------------------------------------- #
@@ -51,7 +51,7 @@ async def upload_file(fileId, channelName, filePath, guild):
     # getting stats of file to add to db and for speed calc #
     fileSize = os.path.getsize(filePath)
     fileName = os.path.basename(filePath)
-    chunkCount = math.ceil(fileSize / CHUNK_SIZE)
+    chunkCount = math.ceil(fileSize / REGULAR_CHUNK_SIZE)
 
     print("Hashing file...")
     fileHash = hash_file(filePath)
@@ -66,8 +66,8 @@ async def upload_file(fileId, channelName, filePath, guild):
     # chunking and sending file #
     with open(filePath, "rb") as infile:
         for i in range(chunkCount):
-            chunk = infile.read(CHUNK_SIZE)
-            file = discord.File(io.BytesIO(chunk), filename=f"[{fileId}][{i+1} - {chunkCount}]")
+            chunk = infile.read(REGULAR_CHUNK_SIZE)
+            file = discord.File(io.BytesIO(chunk), filename=f"{fileId}.{i+1}")
 
             status(f"Uploading chunk {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
 
@@ -79,7 +79,7 @@ async def upload_file(fileId, channelName, filePath, guild):
 
     # getting final time to find time elapsed #
     elapsed = time.time() - startTime
-    print(f"Avg upload speed: {fileSize/1000000/elapsed:.2f} Mbps, took {elapsed:.2f}s")
+    print(f"Avg upload speed: {fileSize/10e6*8/elapsed:.2f} Mbps, took {elapsed:.2f}s")
 
     print("Saving file data to database.")
     save_new_file(fileId, fileName, fileSize, chunkCount, fileHash, channel.id)
@@ -105,7 +105,7 @@ async def download_file(fileId, filePath, guild):
 
     # getting start time for speed calc #
     startTime = time.time()
-
+ 
     # getting message ids of file chunks from db #
     chunkMessageIds = get_chunks(fileId)
 
@@ -139,7 +139,21 @@ async def download_file(fileId, filePath, guild):
 
     # getting final time to find time elapsed #
     elapsed = time.time() - startTime
-    print(f"Avg download speed: {fileSize/1000000/elapsed:.2f} Mbps, took {elapsed:.2f}s")
+    print(f"Avg download speed: {fileSize/10e6*8/elapsed:.2f} Mbps, took {elapsed:.2f}s")
+
+# ---------------------------------------------------- #
+
+async def chunk_file(nitroTier, fileId, chunkPath, filePath):
+
+    with open(filePath, "rb") as infile:
+        for i in range(chunkCount):
+            chunk = infile.read(REGULAR_CHUNK_SIZE)
+            with open()
+
+            status(f"Saving {i+1}/{chunkCount} ({(i+1)/chunkCount:.2%})")
+
+            with open(os.join(chunkPath, {fileId}.{i+1}), "wb") as outfile:
+                outfile.write(chunk)
 
 # ---------------------------------------------------- #
 
@@ -154,7 +168,7 @@ async def remove_file(fileId, guild):
     status(f"Deleting DB chunks")
     messages = []
     
-    # deleting chunks and adding message objects to list for deletion #
+    # deleting chunks and adding message objects to list for mass deletion #
     for msgId in chunkMessageIds:
         msg = await channel.fetch_message(msgId)
         messages.append(msg)
